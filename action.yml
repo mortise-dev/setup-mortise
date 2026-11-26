@@ -1,0 +1,31 @@
+name: Set up Mortise
+description: Install mortise, the command line tool of Mortise, from a GitHub release, after checking its SHA-256.
+author: Nicolas Widart
+branding:
+  icon: check-square
+  color: green
+
+inputs:
+  version:
+    description: The release to install, such as v0.3.0 or 0.3.0. latest installs the newest release.
+    required: false
+    default: latest
+  token:
+    description: A token for the GitHub API. It is used only to find the newest release when version is latest.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  version:
+    description: The tag of the installed release, such as v0.3.0.
+    value: ${{ steps.setup.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_TOKEN: ${{ inputs.token }}
+      run: bash "$GITHUB_ACTION_PATH/setup.sh"
