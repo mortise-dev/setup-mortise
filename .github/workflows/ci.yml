@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        run: shellcheck setup.sh tests/make-fixture-release.sh
+      - name: actionlint
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+          ./actionlint -color
+
+  # Until a release of nWidart/mortise carries the command line tool, the action is tested against a
+  # fixture release: a binary built from a pinned commit of Mortise, packed and summed as a release
+  # does, served from file:// through SETUP_MORTISE_BASE_URL.
+  fixture:
+    name: Fixture release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      MORTISE_COMMIT: a95b5fa531c2641bf5c3c1d5ab7bb8cc65f8feb8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: action
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: nWidart/mortise
+          ref: ${{ env.MORTISE_COMMIT }}
+          path: mortise
+          persist-credentials: false
+      - name: Install rustup
+        run: |
+          if ! command -v rustup > /dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+      - name: Build mortise
+        working-directory: mortise
+        run: |
+          rustup toolchain install --profile minimal
+          cargo build --locked -p mortise-cli
+      - name: Make the fixture release
+        id: fixture
+        run: |
+          binary=mortise/target/debug/mortise
+          if [ "$RUNNER_OS" = Windows ]; then binary=$binary.exe; fi
+          folder="$RUNNER_TEMP/fixture"
+          tag=$(action/tests/make-fixture-release.sh "$binary" "$folder")
+          if [ "$RUNNER_OS" = Windows ]; then url="file:///$(cygpath -m "$folder")"; else url="file://$folder"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Run the action
+        id: setup
+        uses: ./action
+        with:
+          version: ${{ steps.fixture.outputs.tag }}
+        env:
+          SETUP_MORTISE_BASE_URL: ${{ steps.fixture.outputs.url }}
+      - name: Check mortise is on PATH
+        env:
+          TAG: ${{ steps.fixture.outputs.tag }}
+          OUTPUT: ${{ steps.setup.outputs.version }}
+        run: |
+          test "$OUTPUT" = "$TAG"
+          test "$(mortise --version)" = "mortise ${TAG#v}"
+          status=0
+          mortise check mortise/fixtures/shop-api > /dev/null || status=$?
+          test "$status" -eq 1
+
+      - name: Change the archive's line in the sums file
+        env:
+          TAG: ${{ steps.fixture.outputs.tag }}
+        run: |
+          sums="$RUNNER_TEMP/fixture/$TAG/Mortise-$TAG-SHA256SUMS.txt"
+          sed -i.orig 's/^[0-9a-f]\{8\}\([0-9a-f]\{56\}  mortise-\)/00000000\1/' "$sums"
+          ! cmp -s "$sums" "$sums.orig"
+      - name: Run the action on the changed release
+        id: changed
+        continue-on-error: true
+        uses: ./action
+        with:
+          version: ${{ steps.fixture.outputs.tag }}
+        env:
+          SETUP_MORTISE_BASE_URL: ${{ steps.fixture.outputs.url }}
+      - name: Check the action failed
+        env:
+          OUTCOME: ${{ steps.changed.outcome }}
+        run: test "$OUTCOME" = failure
+
+  # Against a real release of nWidart/mortise. It waits for the first release that carries the command
+  # line tool: set the repository variable MORTISE_RELEASE to its tag, such as v0.3.0, to run it.
+  release:
+    name: Release ${{ vars.MORTISE_RELEASE }} (${{ matrix.os }})
+    if: vars.MORTISE_RELEASE != ''
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - id: pinned
+        uses: ./
+        with:
+          version: ${{ vars.MORTISE_RELEASE }}
+      - env:
+          TAG: ${{ vars.MORTISE_RELEASE }}
+        run: test "$(mortise --version)" = "mortise ${TAG#v}"
+      - id: latest
+        uses: ./
+      - run: mortise --version
