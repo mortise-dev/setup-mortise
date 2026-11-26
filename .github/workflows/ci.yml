@@ -96,7 +96,8 @@ jobs:
           TAG: ${{ steps.fixture.outputs.tag }}
         run: |
           sums="$RUNNER_TEMP/fixture/$TAG/Mortise-$TAG-SHA256SUMS.txt"
-          sed -i.orig 's/^[0-9a-f]\{8\}\([0-9a-f]\{56\}  mortise-\)/00000000\1/' "$sums"
+          # sha256sum on Windows marks binary mode with "*" before the name.
+          sed -i.orig 's/^[0-9a-f]\{8\}\([0-9a-f]\{56\} [ *]mortise-\)/00000000\1/' "$sums"
           ! cmp -s "$sums" "$sums.orig"
       - name: Run the action on the changed release
         id: changed
