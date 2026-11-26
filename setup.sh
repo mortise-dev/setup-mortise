@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the command line tool of Mortise from a release of nWidart/mortise:
+# Installs the command line tool of Mortise from a release of mortise-dev/mortise:
 # finds the tag, picks the archive of the runner, checks its SHA-256 against the sums file of the
 # release, unpacks it and adds its folder to PATH. action.yml runs it with bash on Linux, macOS and
 # Windows (Git Bash).
@@ -9,7 +9,7 @@
 # SETUP_MORTISE_BASE_URL replaces the download address for the tests of this repository.
 set -euo pipefail
 
-repo=nWidart/mortise
+repo=mortise-dev/mortise
 base=${SETUP_MORTISE_BASE_URL:-https://github.com/$repo/releases/download}
 
 fail() {
@@ -40,7 +40,7 @@ if ! [[ $number =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 tag=v$number
 
-# The archive of the runner. The names are those of the Installers workflow of nWidart/mortise.
+# The archive of the runner. The names are those of the Installers workflow of mortise-dev/mortise.
 binary=mortise
 case "$RUNNER_OS/$RUNNER_ARCH" in
   Linux/X64) platform=linux-x86_64.tar.gz ;;

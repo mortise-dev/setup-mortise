@@ -1,7 +1,7 @@
 # setup-mortise
 
 A GitHub Action that installs `mortise`, the command line tool of
-[Mortise](https://github.com/nWidart/mortise), from a release. It downloads the archive for the runner,
+[Mortise](https://github.com/mortise-dev/mortise), from a release. It downloads the archive for the runner,
 checks its SHA-256 against the sums file of the release, and puts `mortise` on `PATH`. It needs no Rust
 toolchain and takes a few seconds.
 
@@ -35,7 +35,7 @@ jobs:
         with:
           fetch-depth: 0 # full history gives commits per module; 1 is faster and leaves them out
 
-      - uses: nwidart/setup-mortise@v1
+      - uses: mortise-dev/setup-mortise@v1
 
       - name: Send the snapshot to Mortise Cloud
         run: mortise push .
@@ -68,7 +68,7 @@ Coverage comes from a clover report, so the tests run first:
       - run: cp .env.example .env && php artisan key:generate
       - run: vendor/bin/phpunit --coverage-clover build/coverage/clover.xml
 
-      - uses: nwidart/setup-mortise@v1
+      - uses: mortise-dev/setup-mortise@v1
 
       - name: Send the snapshot to Mortise Cloud
         run: mortise push . --coverage build/coverage/clover.xml
@@ -89,7 +89,7 @@ Coverage comes from a clover report, so the tests run first:
 Pin a version for builds that must not change on their own:
 
 ```yaml
-      - uses: nwidart/setup-mortise@v1
+      - uses: mortise-dev/setup-mortise@v1
         with:
           version: v0.3.0
 ```
@@ -115,7 +115,7 @@ On another runner, such as macOS on Intel, the action fails and says so. Install
 ## What it checks
 
 1. It downloads the archive and `Mortise-vX.Y.Z-SHA256SUMS.txt` from the release of
-   [nWidart/mortise](https://github.com/nWidart/mortise/releases).
+   [mortise-dev/mortise](https://github.com/mortise-dev/mortise/releases).
 2. It compares the SHA-256 of the archive with the archive's line in the sums file. A missing line or
    another sum fails the step, and nothing goes on `PATH`.
 3. It unpacks the archive into the temporary folder of the runner and runs `mortise --version`, which

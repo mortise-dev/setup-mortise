@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Makes a fixture release for the tests of this action: the archive of the runner's platform, named
-# and laid out as a release of nWidart/mortise names and lays it out, and its sums file.
+# and laid out as a release of mortise-dev/mortise names and lays it out, and its sums file.
 #
 #   tests/make-fixture-release.sh <mortise binary> <folder>
 #
