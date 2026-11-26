@@ -10,9 +10,6 @@ toolchain and takes a few seconds.
 when a boundary rule breaks. `mortise push` sends one read of the app to
 [Mortise Cloud](https://mortisecloud.com).
 
-> Status: the first release of Mortise that carries the command line tool is not out yet. Until it is,
-> this action has no release to install and no `v1` tag.
-
 ## Use
 
 ```yaml
