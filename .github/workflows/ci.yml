@@ -24,7 +24,7 @@ jobs:
           bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
           ./actionlint -color
 
-  # Until a release of nWidart/mortise carries the command line tool, the action is tested against a
+  # Until a release of mortise-dev/mortise carries the command line tool, the action is tested against a
   # fixture release: a binary built from a pinned commit of Mortise, packed and summed as a release
   # does, served from file:// through SETUP_MORTISE_BASE_URL.
   fixture:
@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v5
         with:
-          repository: nWidart/mortise
+          repository: mortise-dev/mortise
           ref: ${{ env.MORTISE_COMMIT }}
           path: mortise
           persist-credentials: false
@@ -112,7 +112,7 @@ jobs:
           OUTCOME: ${{ steps.changed.outcome }}
         run: test "$OUTCOME" = failure
 
-  # Against a real release of nWidart/mortise. It waits for the first release that carries the command
+  # Against a real release of mortise-dev/mortise. It waits for the first release that carries the command
   # line tool: set the repository variable MORTISE_RELEASE to its tag, such as v0.3.0, to run it.
   release:
     name: Release ${{ vars.MORTISE_RELEASE }} (${{ matrix.os }})
