@@ -43,7 +43,7 @@ jobs:
         run: mortise check . --format github
 ```
 
-`mortise push` needs a token of [Mortise Cloud](https://mortisecloud.com) in the secret `MORTISE_TOKEN`.
+`mortise push` needs a token of [Mortise Cloud](https://mortisecloud.com/push?utm_source=setup-mortise-readme&utm_medium=referral) in the secret `MORTISE_TOKEN`.
 Without the cloud, leave that step out: `mortise check` needs no token.
 
 ### With coverage
