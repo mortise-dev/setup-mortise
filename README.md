@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # full history gives commits per module; 1 is faster and leaves them out
+          fetch-depth: 0
 
       - uses: mortise-dev/setup-mortise@v1
 
@@ -43,12 +43,15 @@ jobs:
         run: mortise check . --format github
 ```
 
+`fetch-depth: 0` gives `mortise push` the full history. Full history gives commits per module and lets Mortise fill
+past history. A depth of 1 is faster and leaves both out.
+
 `mortise push` needs a token of [Mortise Cloud](https://mortisecloud.com/push?utm_source=setup-mortise-readme&utm_medium=referral) in the secret `MORTISE_TOKEN`.
 Without the cloud, leave that step out: `mortise check` needs no token.
 
 ### With coverage
 
-Coverage comes from a clover report, so the tests run first:
+Coverage comes from a clover report, so the tests run first. The checkout keeps `fetch-depth: 0`, for the same reason:
 
 ```yaml
     steps:
