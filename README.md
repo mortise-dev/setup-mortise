@@ -46,6 +46,20 @@ jobs:
 `fetch-depth: 0` gives `mortise push` the full history. Full history gives commits per module and lets Mortise fill
 past history. A depth of 1 is faster and leaves both out.
 
+On a large repository, add `filter: blob:none` beside `fetch-depth: 0`:
+
+```yaml
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+```
+
+The checkout then gets every commit, and the file contents of the commit it checks out only. A clone of
+two large repositories took about half the time and half the space this way, and gave the same commits per module.
+Mortise 1.1.0 and earlier let git download a few more files while they count the commits, so leave
+`persist-credentials` of the checkout at its default.
+
 `mortise push` needs a token of [Mortise Cloud](https://mortisecloud.com/push?utm_source=setup-mortise-readme&utm_medium=referral) in the secret `MORTISE_TOKEN`.
 Without the cloud, leave that step out: `mortise check` needs no token.
 
